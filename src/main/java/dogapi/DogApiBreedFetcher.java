@@ -34,23 +34,28 @@ public class DogApiBreedFetcher implements BreedFetcher {
         final Request request = new Request.Builder()
                 .url(String.format("https://dog.ceo/api/breed/%s/list", breed))
                 .build();
-        // Hint: look at the API documentation to understand what the response looks like.
-        try {
-            final Response response = client.newCall(request).execute();
-            final JSONObject responseBody = new JSONObject(response.body().string());
 
-            if (responseBody.getString("status").equals("success")) {
-                final JSONArray subBreedsArray = responseBody.getJSONArray("message");
-                final List<String> subBreeds = new ArrayList<>();
-                for (int i = 0; i < subBreedsArray.length(); i++) {
-                    subBreeds.add(subBreedsArray.getString(i));
-                }
-
-                return subBreeds;
+        try (Response response = client.newCall(request).execute()) {
+            if (response.body() == null) {
+                throw new BreedNotFoundException(breed);
             }
-            return Collections.emptyList();
-        }
-        catch (IOException | JSONException e) {
+
+            String bodyString = response.body().string();
+            JSONObject json = new JSONObject(bodyString);
+
+            if (!"success".equals(json.getString("status"))) {
+                throw new BreedNotFoundException(breed);
+            }
+
+            JSONArray message = json.getJSONArray("message");
+            List<String> subBreeds = new ArrayList<>();
+            for (int i = 0; i < message.length(); i++) {
+                subBreeds.add(message.getString(i));
+            }
+
+            return subBreeds;
+
+        } catch (IOException | JSONException e) {
             throw new BreedNotFoundException(breed);
         }
 
