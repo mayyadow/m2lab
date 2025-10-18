@@ -49,7 +49,7 @@ public class DogApiBreedFetcher implements BreedFetcher {
             }
             return Collections.emptyList();
         }
-        catch (IOException | JSONException event) {
+        catch (IOException | JSONException e) {
             e.printStackTrace();
             return Collections.emptyList();
         }
